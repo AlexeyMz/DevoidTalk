@@ -30,4 +30,10 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\DevoidTalk.Core\DevoidTalk.Core.csproj">
+      <Project>{C7C4FAB1-176C-4E59-9C8E-5A27222C7E99}</Project>
+      <Name>DevoidTalk.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
