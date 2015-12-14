@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevoidTalk.Client", "DevoidTalk.Client\DevoidTalk.Client.csproj", "{DF81E308-C6A6-42F1-803B-4EB2EE24404F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevoidTalk.Server", "DevoidTalk.Server\DevoidTalk.Server.csproj", "{15B8980D-57E4-48D3-A80A-1CEF168A27DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevoidTalk.Core", "DevoidTalk.Core\DevoidTalk.Core.csproj", "{C7C4FAB1-176C-4E59-9C8E-5A27222C7E99}"
@@ -21,9 +19,5 @@ Global
 		{C7C4FAB1-176C-4E59-9C8E-5A27222C7E99}.Debug|x86.Build.0 = Debug|Any CPU
 		{C7C4FAB1-176C-4E59-9C8E-5A27222C7E99}.Release|x86.ActiveCfg = Release|Any CPU
 		{C7C4FAB1-176C-4E59-9C8E-5A27222C7E99}.Release|x86.Build.0 = Release|Any CPU
-		{DF81E308-C6A6-42F1-803B-4EB2EE24404F}.Debug|x86.ActiveCfg = Debug|x86
-		{DF81E308-C6A6-42F1-803B-4EB2EE24404F}.Debug|x86.Build.0 = Debug|x86
-		{DF81E308-C6A6-42F1-803B-4EB2EE24404F}.Release|x86.ActiveCfg = Release|x86
-		{DF81E308-C6A6-42F1-803B-4EB2EE24404F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
