@@ -3,6 +3,8 @@ using CommandLine;
 using CommandLine.Text;
 using System.Reflection;
 using System.IO;
+using System.Threading;
+using DevoidTalk.Core;
 
 namespace DevoidTalk.Server
 {
@@ -10,7 +12,7 @@ namespace DevoidTalk.Server
     {
         private sealed class Options
         {
-            [Option('p', "port", DefaultValue = 1000, HelpText = "The network port for incoming connections.")]
+            [Option('p', "port", DefaultValue = 10000, HelpText = "The network port for incoming connections.")]
             public int Port { get; set; }
 
             [HelpOption]
@@ -37,14 +39,40 @@ namespace DevoidTalk.Server
         public static void Main(string[] args)
         {
             var options = new Options();
-            if (CommandLine.Parser.Default.ParseArguments(args, options))
+            if (Parser.Default.ParseArguments(args, options))
             {
-                Console.WriteLine("Port is {0}", options.Port);
+                StartServer(options.Port);
             }
             else
             {
                 // Display the default usage information
                 Console.WriteLine(options.GetUsage());
+            }
+        }
+
+        private static void StartServer(int port)
+        {
+            var cancellationSource = new CancellationTokenSource();
+
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                e.Cancel = true;
+                cancellationSource.Cancel();
+            };
+
+            IClientAcceptor acceptor = new TcpClientAcceptor(port);
+
+            var threadPool = new Core.ThreadPool(10, cancellationSource.Token);
+
+            threadPool.Post(async () =>
+            {
+                await acceptor.Listen(cancellationSource.Token);
+                Console.WriteLine("Finished accepting");
+            });
+
+            while (!cancellationSource.IsCancellationRequested)
+            {
+                var command = Console.ReadLine();
             }
         }
     }

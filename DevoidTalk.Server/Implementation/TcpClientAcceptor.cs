@@ -32,7 +32,7 @@ namespace DevoidTalk.Server
 
         private void OnClientAccepted(Socket clientSocket)
         {
-            var clientConnection = new ClientConnection();
+            var clientConnection = new ClientConnection(clientSocket);
 
             var clientAcceptedHandlers = ClientAccepted;
             if (clientAcceptedHandlers != null)
