@@ -13,31 +13,61 @@ namespace DevoidTalk.Server
         static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         readonly ConnectionManager connectionManager;
+        readonly string welcomeMessage;
 
-        public BroadcastingChat(ConnectionManager connectionManager)
+        public BroadcastingChat(ConnectionManager connectionManager, string welcomeMessage)
         {
             this.connectionManager = connectionManager;
+            this.welcomeMessage = welcomeMessage;
 
             connectionManager.ClientConnected += ClientConnected;
             connectionManager.ClientDisconnected += ClientDisconnected;
             connectionManager.IncomingMessage += IncomingMessage;
         }
 
-        private void ClientConnected(object sender, ClientConnection connection)
+        private async void ClientConnected(object sender, ClientConnection connection)
         {
-            LogBroadcasting(BroadcastToAll(
-                new Message { Sender = "<server>", Text = $"{connection} connected" }));
+            try
+            {
+                await BroadcastToAll(new Message { Sender = "<server>", Text = $"{connection} connected" });
+                await ReplyTo(connection, new Message { Sender = "<server>", Text = welcomeMessage });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "{0} connected handling", connection);
+            }
         }
 
-        private void ClientDisconnected(object sender, ClientConnection connection)
+        private async void ClientDisconnected(object sender, ClientConnection connection)
         {
-            LogBroadcasting(BroadcastToAll(
-                new Message { Sender = "<server>", Text = $"{connection} disconnected" }));
+            try
+            {
+                await BroadcastToAll(new Message { Sender = "<server>", Text = $"{connection} disconnected" });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "{0} disconnected handling", connection);
+            }
         }
 
-        private void IncomingMessage(object sender, IncomingMessage e)
+        private async void IncomingMessage(object sender, IncomingMessage e)
         {
-            LogBroadcasting(BroadcastToAll(e.Message));
+            try
+            {
+                var message = e.Message.Text.TrimStart();
+                if (message.StartsWith("/"))
+                {
+                    await ReplyTo(e.Sender, new Message { Sender = "<server>", Text = "Commands are not supported yet :'(" });
+                }
+                else
+                {
+                    await BroadcastToAll(e.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Incoming message from {0} handling", e.Sender);
+            }
         }
 
         private async Task BroadcastToAll(Message message)
@@ -48,16 +78,10 @@ namespace DevoidTalk.Server
             await Task.WhenAll(tasks);
         }
 
-        private async void LogBroadcasting(Task broadcastingTask)
+        private async Task ReplyTo(ClientConnection client, Message message)
         {
-            try
-            {
-                await broadcastingTask;
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex, "Broadcasting error");
-            }
+            await Task.Yield();
+            await client.SendMessage(message);
         }
     }
 }

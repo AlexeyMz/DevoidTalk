@@ -124,7 +124,8 @@ namespace DevoidTalk.Client
 
         private void PrintMessage(Core.Message message)
         {
-            chatBox.AppendText(Environment.NewLine);
+            if (chatBox.Text.Length > 0 && !chatBox.Text.EndsWith(Environment.NewLine))
+                chatBox.AppendText(Environment.NewLine);
 
             int offset = chatBox.TextLength;
             chatBox.AppendText(message.Sender + ":");

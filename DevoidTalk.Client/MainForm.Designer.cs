@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.Windows.Forms.Label labelMessage;
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.chatBox = new System.Windows.Forms.RichTextBox();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
@@ -83,7 +82,7 @@
             this.chatBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
             this.chatBox.Size = new System.Drawing.Size(623, 439);
             this.chatBox.TabIndex = 0;
-            this.chatBox.Text = resources.GetString("chatBox.Text");
+            this.chatBox.Text = "";
             // 
             // tableLayoutPanel
             // 

@@ -19,6 +19,9 @@ namespace DevoidTalk.Server
             [Option('p', "port", DefaultValue = 10000, HelpText = "The network port for incoming connections.")]
             public int Port { get; set; }
 
+            [Option("welcome", DefaultValue = "Welcome to DevoidTalk.Server", HelpText = "Welcoming message for connecting users.")]
+            public string WelcomeMessage { get; set; }
+
             [HelpOption]
             public string GetUsage()
             {
@@ -45,7 +48,7 @@ namespace DevoidTalk.Server
             var options = new Options();
             if (Parser.Default.ParseArguments(args, options))
             {
-                StartServer(options.Port);
+                StartServer(options);
             }
             else
             {
@@ -54,7 +57,7 @@ namespace DevoidTalk.Server
             }
         }
 
-        private static void StartServer(int port)
+        private static void StartServer(Options options)
         {
             logger.Info("==========================");
             logger.Info("Starting server...");
@@ -70,14 +73,14 @@ namespace DevoidTalk.Server
             };
 
             var threadPool = new Core.ThreadPool(10, cancellation);
-            IClientAcceptor acceptor = new TcpClientAcceptor(port);
+            IClientAcceptor acceptor = new TcpClientAcceptor(options.Port);
             var connectionManager = new ConnectionManager(acceptor, threadPool, cancellation);
-            var broadcastingChat = new BroadcastingChat(connectionManager);
+            var broadcastingChat = new BroadcastingChat(connectionManager, options.WelcomeMessage);
 
             var tcs = new TaskCompletionSource<bool>();
             threadPool.Post(async () =>
             {
-                logger.Info($"Start accepting clients at port {port}");
+                logger.Info($"Start accepting clients at port {options.Port}");
                 try
                 {
                     await acceptor.Listen(cancellation);
