@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="DisconnectedException.cs" />
     <Compile Include="MessageProtocolException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Message.cs" />

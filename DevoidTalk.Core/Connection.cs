@@ -10,12 +10,6 @@ namespace DevoidTalk.Core
 {
     public class Connection
     {
-        private struct PartialMessageData
-        {
-            public int BytesReceived;
-            public int MessageLength;
-        }
-
         const int MaxMessageSize = 1024 * 1024; // 1MB
         const int MinBytesToReceive = 1024;
 
@@ -45,7 +39,7 @@ namespace DevoidTalk.Core
 
             await ReadBytes(payloadLength);
 
-            using (var stream = new MemoryStream(receiveBuffer))
+            using (var stream = new MemoryStream(receiveBuffer, 0, payloadLength))
             {
                 return ProtoBuf.Serializer.Deserialize<Message>(stream);
             }
@@ -75,6 +69,18 @@ namespace DevoidTalk.Core
             }
         }
 
+        public async Task Disconnect(bool ignoreExceptions = true)
+        {
+            try
+            {
+                await socket.DisconnectTaskAsync(true);
+            }
+            catch (Exception)
+            {
+                if (!ignoreExceptions) { throw; }
+            }
+        }
+
         private async Task ReadBytes(int count)
         {
             int bytesRead = 0;
@@ -82,6 +88,7 @@ namespace DevoidTalk.Core
             {
                 int readBytes = await socket.ReceiveTaskAsync(
                     receiveBuffer, bytesRead, count - bytesRead, SocketFlags.None);
+                if (readBytes == 0) { throw new DisconnectedException(); }
                 bytesRead += readBytes;
             }
         }

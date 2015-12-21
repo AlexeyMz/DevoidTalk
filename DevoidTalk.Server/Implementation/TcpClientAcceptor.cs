@@ -20,10 +20,19 @@ namespace DevoidTalk.Server
 
         public async Task Listen(CancellationToken cancellation)
         {
-            while (!cancellation.IsCancellationRequested)
+            serverSocket.Listen(100);
+            var cancellationTcs = new TaskCompletionSource<bool>();
+            cancellation.Register(() => cancellationTcs.TrySetCanceled());
+
+            while (true)
             {
+                cancellation.ThrowIfCancellationRequested();
+
                 var acceptTask = Task.Factory.FromAsync(
                     serverSocket.BeginAccept, serverSocket.EndAccept, null);
+
+                await Task.WhenAny(cancellationTcs.Task, acceptTask);
+                cancellation.ThrowIfCancellationRequested();
 
                 var clientSocket = await acceptTask;
                 OnClientAccepted(clientSocket);

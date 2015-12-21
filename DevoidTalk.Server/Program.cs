@@ -5,11 +5,15 @@ using System.Reflection;
 using System.IO;
 using System.Threading;
 using DevoidTalk.Core;
+using NLog;
+using System.Threading.Tasks;
 
 namespace DevoidTalk.Server
 {
     static class Program
     {
+        static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         private sealed class Options
         {
             [Option('p', "port", DefaultValue = 10000, HelpText = "The network port for incoming connections.")]
@@ -52,28 +56,55 @@ namespace DevoidTalk.Server
 
         private static void StartServer(int port)
         {
+            logger.Info("==========================");
+            logger.Info("Starting server...");
+
             var cancellationSource = new CancellationTokenSource();
+            var cancellation = cancellationSource.Token;
 
             Console.CancelKeyPress += (sender, e) =>
             {
                 e.Cancel = true;
+                logger.Info("Gracefully stopping server...");
                 cancellationSource.Cancel();
             };
 
+            var threadPool = new Core.ThreadPool(10, cancellation);
             IClientAcceptor acceptor = new TcpClientAcceptor(port);
+            var connectionManager = new ConnectionManager(acceptor, threadPool, cancellation);
+            var broadcastingChat = new BroadcastingChat(connectionManager);
 
-            var threadPool = new Core.ThreadPool(10, cancellationSource.Token);
-
+            var tcs = new TaskCompletionSource<bool>();
             threadPool.Post(async () =>
             {
-                await acceptor.Listen(cancellationSource.Token);
-                Console.WriteLine("Finished accepting");
+                logger.Info($"Start accepting clients at port {port}");
+                try
+                {
+                    await acceptor.Listen(cancellation);
+                    logger.Info("Finish accepting clients");
+                    tcs.TrySetResult(true);
+                }
+                catch (OperationCanceledException)
+                {
+                    tcs.SetCanceled();
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Error accepting clients");
+                    tcs.SetException(ex);
+                }
             });
 
-            while (!cancellationSource.IsCancellationRequested)
+            try
             {
-                var command = Console.ReadLine();
+                tcs.Task.Wait();
             }
+            catch (AggregateException ex)
+            {
+                try { ex.Handle(exc => exc is OperationCanceledException); }
+                catch (Exception innerEx) { logger.Error(innerEx); }
+            }
+            logger.Info("Server stopped");
         }
     }
 }

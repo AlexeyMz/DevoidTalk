@@ -85,6 +85,6 @@ namespace DevoidTalk.Core
             work.Add(action);
         }
 
-        public void Post(Func<Task> action) => Post(() => action());
+        public void Post(Func<Task> action) => Post((Action)(() => action()));
     }
 }

@@ -8,14 +8,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevoidTalk.Server.Implementation
+namespace DevoidTalk.Server
 {
-    public sealed class CharServer
+    public sealed class ConnectionManager
     {
         static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         readonly IClientAcceptor acceptor;
-        readonly Core.ThreadPool threadPool;
         readonly CancellationToken cancellation;
 
         IImmutableSet<ClientConnection> clients = ImmutableHashSet<ClientConnection>.Empty;
@@ -29,7 +28,7 @@ namespace DevoidTalk.Server.Implementation
             get { return clients; }
         }
 
-        public CharServer(
+        public ConnectionManager(
             IClientAcceptor acceptor,
             Core.ThreadPool threadPool,
             CancellationToken cancellation)
@@ -41,6 +40,7 @@ namespace DevoidTalk.Server.Implementation
         {
             ImmutableInterlocked.Update(ref clients, oldClients => oldClients.Add(connection));
             logger.Debug("{0} connected", connection);
+            OnClientConnected(connection);
 
             try
             {
@@ -48,13 +48,14 @@ namespace DevoidTalk.Server.Implementation
             }
             catch (Exception ex)
             {
-                if (ex is OperationCanceledException) { }
+                if (ex is OperationCanceledException || ex is DisconnectedException) { }
                 else { logger.Warn(ex, "{0} disconnected with error", connection); }
             }
             finally
             {
                 ImmutableInterlocked.Update(ref clients, oldClients => oldClients.Remove(connection));
-                logger.Debug("{0} disconnected");
+                logger.Debug("{0} disconnected", connection);
+                OnClientDisconnected(connection);
             }
         }
 
@@ -67,11 +68,22 @@ namespace DevoidTalk.Server.Implementation
             }
         }
 
+        private void OnClientConnected(ClientConnection connection)
+        {
+            var handlers = ClientConnected;
+            if (handlers != null) { handlers(this, connection); }
+        }
+
+        private void OnClientDisconnected(ClientConnection connection)
+        {
+            var handlers = ClientDisconnected;
+            if (handlers != null) { handlers(this, connection); }
+        }
+
         private void OnIncomingMessage(IncomingMessage incomingMessage)
         {
             var handlers = IncomingMessage;
-            if (handlers != null)
-                handlers(this, incomingMessage);
+            if (handlers != null) { handlers(this, incomingMessage); }
         }
     }
 

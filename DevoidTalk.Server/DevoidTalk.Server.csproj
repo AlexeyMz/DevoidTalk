@@ -44,7 +44,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Implementation\CharServer.cs" />
+    <Compile Include="Implementation\BroadcastingChat.cs" />
+    <Compile Include="Implementation\ConnectionManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Implementation\TcpClientAcceptor.cs" />
