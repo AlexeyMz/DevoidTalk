@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Implementation\BroadcastingChat.cs" />
+    <Compile Include="Implementation\CommandShell.cs" />
     <Compile Include="Implementation\ConnectionManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -28,11 +28,9 @@ namespace DevoidTalk.Server
             get { return clients; }
         }
 
-        public ConnectionManager(
-            IClientAcceptor acceptor,
-            Core.ThreadPool threadPool,
-            CancellationToken cancellation)
+        public ConnectionManager(IClientAcceptor acceptor, CancellationToken cancellation)
         {
+            this.acceptor = acceptor;
             acceptor.ClientAccepted += OnClientAccepted;
         }
 

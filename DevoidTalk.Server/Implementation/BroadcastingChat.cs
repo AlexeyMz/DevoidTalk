@@ -15,6 +15,8 @@ namespace DevoidTalk.Server
         readonly ConnectionManager connectionManager;
         readonly string welcomeMessage;
 
+        public Func<IncomingMessage, Task> IncomingMessageStrategy { get; set; }
+
         public BroadcastingChat(ConnectionManager connectionManager, string welcomeMessage)
         {
             this.connectionManager = connectionManager;
@@ -52,17 +54,11 @@ namespace DevoidTalk.Server
 
         private async void IncomingMessage(object sender, IncomingMessage e)
         {
+            var strategy = IncomingMessageStrategy;
+            if (strategy == null) { return; }
             try
             {
-                var message = e.Message.Text.TrimStart();
-                if (message.StartsWith("/"))
-                {
-                    await ReplyTo(e.Sender, new Message { Sender = "<server>", Text = "Commands are not supported yet :'(" });
-                }
-                else
-                {
-                    await BroadcastToAll(e.Message);
-                }
+                await strategy(e);
             }
             catch (Exception ex)
             {
@@ -70,7 +66,7 @@ namespace DevoidTalk.Server
             }
         }
 
-        private async Task BroadcastToAll(Message message)
+        public async Task BroadcastToAll(Message message)
         {
             await Task.Yield();
             var tasks = from client in connectionManager.Clients
@@ -78,7 +74,7 @@ namespace DevoidTalk.Server
             await Task.WhenAll(tasks);
         }
 
-        private async Task ReplyTo(ClientConnection client, Message message)
+        public async Task ReplyTo(ClientConnection client, Message message)
         {
             await Task.Yield();
             await client.SendMessage(message);

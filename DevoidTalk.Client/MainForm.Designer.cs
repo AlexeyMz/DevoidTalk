@@ -110,20 +110,21 @@
             this.messageBox.Multiline = true;
             this.messageBox.Name = "messageBox";
             this.messageBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.messageBox.Size = new System.Drawing.Size(498, 101);
+            this.messageBox.Size = new System.Drawing.Size(483, 101);
             this.messageBox.TabIndex = 4;
+            this.messageBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.messageBox_KeyUp);
             // 
             // buttonSend
             // 
             this.buttonSend.AutoSize = true;
             this.buttonSend.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.buttonSend.Dock = System.Windows.Forms.DockStyle.Right;
-            this.buttonSend.Location = new System.Drawing.Point(574, 3);
+            this.buttonSend.Location = new System.Drawing.Point(559, 3);
             this.buttonSend.Name = "buttonSend";
             this.tableLayoutPanel.SetRowSpan(this.buttonSend, 2);
-            this.buttonSend.Size = new System.Drawing.Size(46, 101);
+            this.buttonSend.Size = new System.Drawing.Size(61, 101);
             this.buttonSend.TabIndex = 5;
-            this.buttonSend.Text = "Send";
+            this.buttonSend.Text = "Send\r\n (Enter)";
             this.buttonSend.UseVisualStyleBackColor = true;
             this.buttonSend.Click += new System.EventHandler(this.buttonSend_Click);
             // 

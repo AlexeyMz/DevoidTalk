@@ -25,6 +25,10 @@ namespace DevoidTalk.Client
         CancellationTokenSource cancellationSource;
         Connection connection;
 
+        string lastMessage = "";
+
+        bool sendingMessage = false;
+
         public MainForm()
         {
             InitializeComponent();
@@ -124,7 +128,7 @@ namespace DevoidTalk.Client
 
         private void PrintMessage(Core.Message message)
         {
-            if (chatBox.Text.Length > 0 && !chatBox.Text.EndsWith(Environment.NewLine))
+            if (chatBox.Text.Length > 0 && !chatBox.Text.EndsWith("\n"))
                 chatBox.AppendText(Environment.NewLine);
 
             int offset = chatBox.TextLength;
@@ -141,14 +145,46 @@ namespace DevoidTalk.Client
             chatBox.ScrollToCaret();
         }
 
+        private void messageBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter && !e.Shift && !e.Control)
+            {
+                var ignored = SendMessage();
+            }
+            else if (e.KeyCode == Keys.Up && messageBox.TextLength == 0)
+            {
+                messageBox.Text = lastMessage;
+                messageBox.Select(messageBox.TextLength, 0);
+            }
+        }
+
         private void buttonSend_Click(object sender, EventArgs e)
         {
-            var ignored = connection.SendMessage(new Core.Message()
+            var ignored = SendMessage();
+        }
+
+        private async Task SendMessage()
+        {
+            if (sendingMessage) { return; }
+
+            sendingMessage = true;
+            buttonSend.Enabled = false;
+            messageBox.ReadOnly = true;
+
+            string message = messageBox.Text.TrimEnd('\r', '\n');
+            lastMessage = message;
+
+            await connection.SendMessage(new Core.Message()
             {
                 Sender = connectionDialog.ChatName,
-                Text = messageBox.Text,
+                Text = message,
             });
+
             messageBox.Clear();
+            messageBox.ReadOnly = false;
+            buttonSend.Enabled = true;
+
+            sendingMessage = false;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

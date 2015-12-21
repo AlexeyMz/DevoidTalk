@@ -31,6 +31,7 @@ namespace DevoidTalk.Core
 
         public ThreadPool(int threadCount, CancellationToken cancellation)
         {
+            this.syncContext = new ThreadPoolSynchronizationContext(this);
             InitThreads(threadCount);
         }
 

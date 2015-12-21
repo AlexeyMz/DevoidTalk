@@ -74,8 +74,40 @@ namespace DevoidTalk.Server
 
             var threadPool = new Core.ThreadPool(10, cancellation);
             IClientAcceptor acceptor = new TcpClientAcceptor(options.Port);
-            var connectionManager = new ConnectionManager(acceptor, threadPool, cancellation);
+            var connectionManager = new ConnectionManager(acceptor, cancellation);
             var broadcastingChat = new BroadcastingChat(connectionManager, options.WelcomeMessage);
+            var commandShell = new CommandShell("cmd", command => $"/c {command}");
+
+            Func<ClientConnection, string, Task> processCommand = async (client, command) =>
+            {
+                Message reply;
+                if (command.StartsWith("/c "))
+                {
+                    var task = commandShell.TryStartExecuting(command.Substring(3), TimeSpan.FromSeconds(10));
+                    if (task == null)
+                        reply = new Message { Sender = "<server-shell>", Text = "Another command is already running." };
+                    else
+                    {
+                        await broadcastingChat.ReplyTo(client, new Message { Sender = "<server-shell>", Text = $"Running `{command}`..." });
+
+                        try { reply = new Message { Sender = "<server-shell>", Text = $"Execution result: {Environment.NewLine}{await task}" }; }
+                        catch (OperationCanceledException) { reply = new Message { Sender = "<server-shell>", Text = $"Execution timed out." }; }
+                    }
+                }
+                else
+                    reply = new Message { Sender = "<server>", Text = $"Invalid command '{command}'" };
+
+                await broadcastingChat.ReplyTo(client, reply);
+            };
+
+            broadcastingChat.IncomingMessageStrategy = incoming =>
+            {
+                var message = incoming.Message.Text.TrimStart();
+                if (message.StartsWith("/"))
+                    return processCommand(incoming.Sender, message);
+                else
+                    return broadcastingChat.BroadcastToAll(incoming.Message);
+            };
 
             var tcs = new TaskCompletionSource<bool>();
             threadPool.Post(async () =>
