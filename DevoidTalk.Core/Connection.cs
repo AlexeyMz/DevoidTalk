@@ -14,6 +14,7 @@ namespace DevoidTalk.Core
         const int MinBytesToReceive = 1024;
 
         readonly Socket socket;
+        readonly AsyncLock sendingLock = new AsyncLock();
 
         byte[] receiveBuffer = new byte[4 * 1024]; // default is 4KB
 
@@ -46,6 +47,14 @@ namespace DevoidTalk.Core
         }
 
         public async Task SendMessage(Message message)
+        {
+            using (var releaser = await sendingLock.LockAsync())
+            {
+                await SendMessageWithoutInterleaving(message);
+            }
+        }
+
+        private async Task SendMessageWithoutInterleaving(Message message)
         {
             using (var sendStream = new MemoryStream())
             {

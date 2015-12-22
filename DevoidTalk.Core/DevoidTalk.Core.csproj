@@ -36,6 +36,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="AsyncLock.cs" />
+    <Compile Include="AsyncSemaphor.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="DisconnectedException.cs" />
     <Compile Include="MessageProtocolException.cs" />
