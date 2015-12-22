@@ -174,17 +174,22 @@ namespace DevoidTalk.Client
             string message = messageBox.Text.TrimEnd('\r', '\n');
             lastMessage = message;
 
-            await connection.SendMessage(new Core.Message()
+            try
             {
-                Sender = connectionDialog.ChatName,
-                Text = message,
-            });
+                await connection.SendMessage(new Core.Message()
+                {
+                    Sender = connectionDialog.ChatName,
+                    Text = message,
+                });
+            }
+            finally
+            {
+                messageBox.Clear();
+                messageBox.ReadOnly = false;
+                buttonSend.Enabled = true;
 
-            messageBox.Clear();
-            messageBox.ReadOnly = false;
-            buttonSend.Enabled = true;
-
-            sendingMessage = false;
+                sendingMessage = false;
+            }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
