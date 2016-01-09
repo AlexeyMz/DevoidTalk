@@ -31,6 +31,7 @@ namespace DevoidTalk.Server
         public ConnectionManager(IClientAcceptor acceptor, CancellationToken cancellation)
         {
             this.acceptor = acceptor;
+            this.cancellation = cancellation;
             acceptor.ClientAccepted += OnClientAccepted;
         }
 
@@ -59,8 +60,9 @@ namespace DevoidTalk.Server
 
         private async Task ReadClientMessages(ClientConnection connection)
         {
-            while (!cancellation.IsCancellationRequested)
+            while (true)
             {
+                cancellation.ThrowIfCancellationRequested();
                 var message = await connection.ReadMessage();
                 OnIncomingMessage(new IncomingMessage(connection, message));
             }
@@ -68,20 +70,17 @@ namespace DevoidTalk.Server
 
         private void OnClientConnected(ClientConnection connection)
         {
-            var handlers = ClientConnected;
-            if (handlers != null) { handlers(this, connection); }
+            ClientConnected?.Invoke(this, connection);
         }
 
         private void OnClientDisconnected(ClientConnection connection)
         {
-            var handlers = ClientDisconnected;
-            if (handlers != null) { handlers(this, connection); }
+            ClientDisconnected?.Invoke(this, connection);
         }
 
         private void OnIncomingMessage(IncomingMessage incomingMessage)
         {
-            var handlers = IncomingMessage;
-            if (handlers != null) { handlers(this, incomingMessage); }
+            IncomingMessage?.Invoke(this, incomingMessage);
         }
     }
 

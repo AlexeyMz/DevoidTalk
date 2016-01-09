@@ -113,10 +113,13 @@ namespace DevoidTalk.Core
 
         private static void WriteInt32BigEndian(int value, byte[] buffer, int offset)
         {
-            buffer[offset + 0] = (byte)((value >> 24) & 0xFF);
-            buffer[offset + 1] = (byte)((value >> 16) & 0xFF);
-            buffer[offset + 2] = (byte)((value >> 8) & 0xFF);
-            buffer[offset + 3] = (byte)(value & 0xFF);
+            unchecked
+            {
+                buffer[offset + 0] = (byte)((value >> 24) & 0xFF);
+                buffer[offset + 1] = (byte)((value >> 16) & 0xFF);
+                buffer[offset + 2] = (byte)((value >> 8) & 0xFF);
+                buffer[offset + 3] = (byte)(value & 0xFF);
+            }
         }
     }
 }
