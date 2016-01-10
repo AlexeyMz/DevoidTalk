@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DevoidTalk.Core
 {
-    public class Connection
+    public class Connection : IDisposable
     {
         const int MaxMessageSize = 1024 * 1024; // 1MB
         const int MinBytesToReceive = 1024;
@@ -88,6 +88,11 @@ namespace DevoidTalk.Core
             {
                 if (!ignoreExceptions) { throw; }
             }
+        }
+
+        void IDisposable.Dispose()
+        {
+            var ignored = Disconnect(true);
         }
 
         private async Task ReadBytes(int count)

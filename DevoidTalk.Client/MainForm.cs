@@ -69,18 +69,12 @@ namespace DevoidTalk.Client
                 var result = new ConnectingProgress(connectTask).ShowDialog(this);
                 if (result == DialogResult.Cancel)
                     throw new OperationCanceledException();
-
-                cancellationSource = new CancellationTokenSource();
-
-                connection = await connectTask;
-                try
+                
+                using (connection = await connectTask)
                 {
+                    cancellationSource = new CancellationTokenSource();
                     cancellationSource.Token.Register(() => { var ignored = connection.Disconnect(); });
                     await ReadMessages(connection, cancellationSource.Token);
-                }
-                finally
-                {
-                    var ignore = connection.Disconnect();
                 }
             }
             catch (Exception ex)
@@ -122,6 +116,7 @@ namespace DevoidTalk.Client
             while (!cancellation.IsCancellationRequested)
             {
                 var message = await connection.ReadMessage();
+                cancellation.ThrowIfCancellationRequested();
                 PrintMessage(message);
             }
         }
