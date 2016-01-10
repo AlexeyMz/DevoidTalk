@@ -60,7 +60,10 @@ namespace DevoidTalk.Core
             
             while (!cancellation.IsCancellationRequested)
             {
-                var action = work.Take(cancellation);
+                Action action;
+                try { action = work.Take(cancellation); }
+                catch (OperationCanceledException) { continue; }
+
                 try
                 {
                     action();
@@ -74,11 +77,7 @@ namespace DevoidTalk.Core
 
         private void OnUnhandledException(Exception ex)
         {
-            var handlers = UnhandledException;
-            if (handlers != null)
-            {
-                handlers(this, ex);
-            }
+            UnhandledException?.Invoke(this, ex);
         }
 
         public void Post(Action action)

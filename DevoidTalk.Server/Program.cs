@@ -109,6 +109,11 @@ namespace DevoidTalk.Server
                     return broadcastingChat.BroadcastToAll(incoming.Message);
             };
 
+            threadPool.UnhandledException += (sender, ex) =>
+            {
+                logger.Error(ex, "Unhandled exception in thread pool");
+            };
+
             var tcs = new TaskCompletionSource<bool>();
             threadPool.Post(async () =>
             {
