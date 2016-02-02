@@ -15,7 +15,8 @@ namespace DevoidTalk.Server
         public TcpClientAcceptor(int port)
         {
             serverSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+            serverSocket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            serverSocket.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
         }
 
         public async Task Listen(CancellationToken cancellation)

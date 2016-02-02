@@ -17,7 +17,7 @@ namespace DevoidTalk.Client
 {
     public partial class MainForm : Form
     {
-        readonly Regex serverAddressRegex = new Regex("^(?<host>[^:]+)(:(?<port>[0-9]+))?$");
+        readonly Regex serverAddressRegex = new Regex("^(?<host>.*?)(:(?<port>[0-9]+))?$");
         
         ConnectionDialog connectionDialog;
 
@@ -73,7 +73,7 @@ namespace DevoidTalk.Client
                 using (connection = await connectTask)
                 {
                     cancellationSource = new CancellationTokenSource();
-                    cancellationSource.Token.Register(() => { var ignored = connection.Disconnect(); });
+                    cancellationSource.Token.Register(() => { connection.Disconnect(); });
                     await ReadMessages(connection, cancellationSource.Token);
                 }
             }
@@ -140,11 +140,11 @@ namespace DevoidTalk.Client
             chatBox.ScrollToCaret();
         }
 
-        private void messageBox_KeyUp(object sender, KeyEventArgs e)
+        private async void messageBox_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter && !e.Shift && !e.Control)
             {
-                var ignored = SendMessage();
+                await SendMessage();
             }
             else if (e.KeyCode == Keys.Up && messageBox.TextLength == 0)
             {
@@ -153,9 +153,9 @@ namespace DevoidTalk.Client
             }
         }
 
-        private void buttonSend_Click(object sender, EventArgs e)
+        private async void buttonSend_Click(object sender, EventArgs e)
         {
-            var ignored = SendMessage();
+            await SendMessage();
         }
 
         private async Task SendMessage()

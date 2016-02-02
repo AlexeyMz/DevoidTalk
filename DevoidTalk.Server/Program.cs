@@ -22,6 +22,12 @@ namespace DevoidTalk.Server
             [Option("welcome", DefaultValue = "Welcome to DevoidTalk.Server", HelpText = "Welcoming message for connecting users.")]
             public string WelcomeMessage { get; set; }
 
+            [Option("shell", DefaultValue = "cmd", HelpText = "Shell executable for running \"/c commands\", like 'cmd' or 'bash'")]
+            public string CommandShell { get; set; }
+
+            [Option("shell-template", DefaultValue = "/c {0}", HelpText = "Template for shell command, like '/c {0}' using 'cmd' or '-c {0}' using 'bash'")]
+            public string ShellTemplate { get; set; }
+
             [HelpOption]
             public string GetUsage()
             {
@@ -50,11 +56,6 @@ namespace DevoidTalk.Server
             {
                 StartServer(options);
             }
-            else
-            {
-                // Display the default usage information
-                Console.WriteLine(options.GetUsage());
-            }
         }
 
         private static void StartServer(Options options)
@@ -76,7 +77,8 @@ namespace DevoidTalk.Server
             IClientAcceptor acceptor = new TcpClientAcceptor(options.Port);
             var connectionManager = new ConnectionManager(acceptor, cancellation);
             var broadcastingChat = new BroadcastingChat(connectionManager, options.WelcomeMessage);
-            var commandShell = new CommandShell("cmd", command => $"/c {command}");
+            var commandShell = new CommandShell(
+                options.CommandShell, command => string.Format(options.ShellTemplate, command));
 
             Func<ClientConnection, string, Task> processCommand = async (client, command) =>
             {
@@ -89,9 +91,17 @@ namespace DevoidTalk.Server
                     else
                     {
                         await broadcastingChat.ReplyTo(client, new Message { Sender = "<server-shell>", Text = $"Running `{command}`..." });
-
-                        try { reply = new Message { Sender = "<server-shell>", Text = $"Execution result: {Environment.NewLine}{await task}" }; }
+                        try
+                        {
+                            string executionResult = await task;
+                            reply = new Message { Sender = "<server-shell>", Text = $"Execution result: {Environment.NewLine}{executionResult}" };
+                        }
                         catch (OperationCanceledException) { reply = new Message { Sender = "<server-shell>", Text = $"Execution timed out." }; }
+                        catch (Exception ex)
+                        {
+                            logger.Error(ex, "Error executing shell command");
+                            reply = new Message { Sender = "<server-shell>", Text = $"Unknown error occured." };
+                        }
                     }
                 }
                 else

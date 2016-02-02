@@ -62,7 +62,9 @@ namespace DevoidTalk.Server
             await Task.WhenAny(readTask, Task.Delay(timeout));
             if (readTask.IsCompleted)
             {
-                string result = $"{await output}{Environment.NewLine}{await error}";
+                string outputText = await output;
+                string errorText = await error;
+                string result = $"{outputText}{Environment.NewLine}{errorText}";
                 logger.Info($"Shell command completed with result: {Environment.NewLine}{result}");
                 return result;
             }
