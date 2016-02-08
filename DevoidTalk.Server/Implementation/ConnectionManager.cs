@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 
 namespace DevoidTalk.Server
 {
@@ -41,19 +42,33 @@ namespace DevoidTalk.Server
             logger.Debug("{0} connected", connection);
             OnClientConnected(connection);
 
+            int? socketErrorCode = null;
+
             try
             {
                 await ReadClientMessages(connection);
             }
             catch (Exception ex)
             {
-                if (ex is OperationCanceledException || ex is DisconnectedException) { }
+                if (ex is DisconnectedException && ex.InnerException != null)
+                {
+                    var socketException = ex.InnerException as SocketException;
+                    if (socketException != null)
+                        socketErrorCode = socketException.ErrorCode;
+                }
+
+                if (ex is OperationCanceledException || ex is DisconnectedException) {}
                 else { logger.Warn(ex, "{0} disconnected with error", connection); }
             }
             finally
             {
                 ImmutableInterlocked.Update(ref clients, oldClients => oldClients.Remove(connection));
-                logger.Debug("{0} disconnected", connection);
+
+                if (socketErrorCode.HasValue)
+                    logger.Debug("{0} disconnected ({1}: {2})", connection, socketErrorCode, (SocketError)socketErrorCode);
+                else
+                    logger.Debug("{0} disconnected", connection);
+                
                 OnClientDisconnected(connection);
             }
         }
@@ -64,6 +79,7 @@ namespace DevoidTalk.Server
             {
                 cancellation.ThrowIfCancellationRequested();
                 var message = await connection.ReadMessage();
+                connection.LastUsername = message.Sender;
                 OnIncomingMessage(new IncomingMessage(connection, message));
             }
         }

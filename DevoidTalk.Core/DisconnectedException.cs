@@ -11,6 +11,7 @@ namespace DevoidTalk.Core
     {
         public DisconnectedException() { }
         public DisconnectedException(string message) : base(message) { }
+        public DisconnectedException(Exception inner) : base("", inner) { }
         public DisconnectedException(string message, Exception inner) : base(message, inner) { }
         protected DisconnectedException(
           System.Runtime.Serialization.SerializationInfo info,

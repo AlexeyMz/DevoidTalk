@@ -28,14 +28,14 @@ namespace DevoidTalk.Server
         {
             if (resetEvent.WaitOne(0))
             {
-                logger.Info($"Running `{command}`...");
+                logger.Debug($"Running `{command}`...");
                 var task = Run(command, timeout);
                 task.ContinueWith(t => resetEvent.Set());
                 return task;
             }
             else
             {
-                logger.Info($"Failed to concurrently run `{command}`");
+                logger.Debug($"Failed to concurrently run `{command}`");
                 return null;
             }
         }
@@ -65,11 +65,12 @@ namespace DevoidTalk.Server
                 string outputText = await output;
                 string errorText = await error;
                 string result = $"{outputText}{Environment.NewLine}{errorText}";
-                logger.Info($"Shell command completed with result: {Environment.NewLine}{result}");
+                logger.Debug($"Shell command completed with result: {Environment.NewLine}{result}");
                 return result;
             }
             else
             {
+                logger.Debug($"Shell command execution timed out");
                 try { process.Kill(); }
                 catch (Exception ex) { logger.Warn(ex, "Proccess kill error"); }
                 throw new OperationCanceledException("Shell command execution timed out");

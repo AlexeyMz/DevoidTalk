@@ -68,12 +68,20 @@ namespace DevoidTalk.Core
                 byte[] buffer = sendStream.GetBuffer();
                 WriteInt32BigEndian(payloadLength, sendStream.GetBuffer(), 0);
 
-                int bytesWritten = 0;
-                while (bytesWritten < messageLength)
+                try
                 {
-                    int written = await socket.SendTaskAsync(
-                        buffer, bytesWritten, messageLength - bytesWritten, SocketFlags.None);
-                    bytesWritten += written;
+                    int bytesWritten = 0;
+                    while (bytesWritten < messageLength)
+                    {
+                        int written = await socket.SendTaskAsync(
+                            buffer, bytesWritten, messageLength - bytesWritten, SocketFlags.None);
+                        bytesWritten += written;
+                    }
+                }
+                catch (SocketException ex)
+                {
+                    if (!socket.Connected) { throw new DisconnectedException(ex); }
+                    throw;
                 }
             }
         }
@@ -97,13 +105,21 @@ namespace DevoidTalk.Core
 
         private async Task ReadBytes(int count)
         {
-            int bytesRead = 0;
-            while (bytesRead < count)
+            try
             {
-                int readBytes = await socket.ReceiveTaskAsync(
-                    receiveBuffer, bytesRead, count - bytesRead, SocketFlags.None);
-                if (readBytes == 0) { throw new DisconnectedException(); }
-                bytesRead += readBytes;
+                int bytesRead = 0;
+                while (bytesRead < count)
+                {
+                    int readBytes = await socket.ReceiveTaskAsync(
+                        receiveBuffer, bytesRead, count - bytesRead, SocketFlags.None);
+                    if (readBytes == 0) { throw new DisconnectedException(); }
+                    bytesRead += readBytes;
+                }
+            }
+            catch (SocketException ex)
+            {
+                if (!socket.Connected) { throw new DisconnectedException(ex); }
+                throw;
             }
         }
 

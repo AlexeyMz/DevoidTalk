@@ -34,6 +34,7 @@ namespace DevoidTalk.Server
                 await BroadcastToAll(new Message { Sender = "<server>", Text = $"{connection} connected" });
                 await ReplyTo(connection, new Message { Sender = "<server>", Text = welcomeMessage });
             }
+            catch (DisconnectedException) { /* ignore */ }
             catch (Exception ex)
             {
                 logger.Warn(ex, "{0} connected handling", connection);
@@ -46,6 +47,7 @@ namespace DevoidTalk.Server
             {
                 await BroadcastToAll(new Message { Sender = "<server>", Text = $"{connection} disconnected" });
             }
+            catch (DisconnectedException) { /* ignore */ }
             catch (Exception ex)
             {
                 logger.Warn(ex, "{0} disconnected handling", connection);
@@ -60,6 +62,7 @@ namespace DevoidTalk.Server
             {
                 await strategy(e);
             }
+            catch (DisconnectedException) { /* ignore */ }
             catch (Exception ex)
             {
                 logger.Warn(ex, "Incoming message from {0} handling", e.Sender);
