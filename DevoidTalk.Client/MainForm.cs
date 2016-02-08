@@ -17,7 +17,7 @@ namespace DevoidTalk.Client
 {
     public partial class MainForm : Form
     {
-        readonly Regex serverAddressRegex = new Regex("^(?<host>.*?)(:(?<port>[0-9]+))?$");
+        readonly Regex serverAddressRegex = new Regex(@"^\[?(?<host>[^\[\]]*?)\]?(:(?<port>[0-9]+))?$");
         
         ConnectionDialog connectionDialog;
 
@@ -32,9 +32,8 @@ namespace DevoidTalk.Client
         public MainForm()
         {
             InitializeComponent();
-
+            
             var settings = Properties.Settings.Default;
-
             connectionDialog = new ConnectionDialog()
             {
                 ServerAddress = settings.ServerAddress,
@@ -44,7 +43,8 @@ namespace DevoidTalk.Client
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
-            ShowConnectionDialog();
+            // invoke asyncronously to fix unresponsive window issue on Mono
+            this.BeginInvoke((Action)ShowConnectionDialog);
         }
 
         private void ShowConnectionDialog()
@@ -62,9 +62,10 @@ namespace DevoidTalk.Client
 
         private async void TryConnect()
         {
+            Task<Connection> connectTask = null;
             try
             {
-                var connectTask = Connect();
+                connectTask = Connect();
 
                 var result = new ConnectingProgress(connectTask).ShowDialog(this);
                 if (result == DialogResult.Cancel)
@@ -84,9 +85,13 @@ namespace DevoidTalk.Client
                     var errorDialog = new ErrorDialog() { ErrorMessage = ex.ToString() };
                     errorDialog.ShowDialog(this);
                 }
-                ShowConnectionDialog();
             }
-            
+            finally
+            {
+                connectTask?.ContinueWith(t => t.Result.Disconnect());
+            }
+
+            ShowConnectionDialog();
         }
 
         private async Task<Connection> Connect()
@@ -113,7 +118,7 @@ namespace DevoidTalk.Client
 
         private async Task ReadMessages(Connection connection, CancellationToken cancellation)
         {
-            while (!cancellation.IsCancellationRequested)
+            while (true)
             {
                 var message = await connection.ReadMessage();
                 cancellation.ThrowIfCancellationRequested();
